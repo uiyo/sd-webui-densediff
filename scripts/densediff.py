@@ -62,7 +62,6 @@ class ExtensionTemplateScript(scripts.Script):
                 gr.HTML('<p style="margin-bottom:0.8em"> *If DenseDiffusion is enabled, the default sampling steps can only be larger than 50 </p>')
                 
             else:
-                # gr.HTML('<p style="margin-bottom:0.8em"> *DenseDiffusion on img2img task is based on the ControlNet, please ensure your ControlNet is enabled before using this extension. </p>')
                 gr.HTML('<p style="margin-bottom:0.8em"> ** USER GUIDIENCE: Upload your image in the sketch tab -> copy your image to img2img -> complete your masked sketch -> Start Processing Sketch and label your masks -> formulate your prompts and send to the general prompt box (optinal) -> switch your sketch tab to img2img (!important) -> Generate </p>')
 
             with gr.Row(visible=True) as enabled: 
@@ -72,7 +71,7 @@ class ExtensionTemplateScript(scripts.Script):
                     else:
                         image = self.original_image
                         masks = self.skecth
-                        # masked_image = gr.Image(source="upload", tool="color-sketch", type="pil", elem_id='mask_record', visible=False)
+
                     with gr.Column():
                         sketch_button = gr.Button("Start Processing Sketch", interactive=True)
                     with gr.Column(visible=False) as post_sketch:
@@ -104,8 +103,7 @@ class ExtensionTemplateScript(scripts.Script):
                         final_run_btn = gr.Button("Send to Main Prompt", interactive=True)
                         clear_prompt_btn = gr.Button("Clear Main Prompt", interactive=True) 
                         set_default_btn = gr.Button("Default Setting Reset", interactive=True) 
-                       
-                        # bsz_ = gr.Slider(label="Number of Samples to generate", minimum=1, maximum=4, value=2, step=1)      
+                           
                 
             
             if not is_img2img:
@@ -140,7 +138,6 @@ class ExtensionTemplateScript(scripts.Script):
 
     
     def after_component(self, general_output, **kwargs): 
-        # print(kwargs.get("elem_id")) # to show all the button & api id
         if kwargs.get("elem_id") == "txt2img_prompt":
             self.boxx = general_output
         
@@ -175,7 +172,6 @@ class ExtensionTemplateScript(scripts.Script):
     
     def process(self, p, *args):
         if args[-1]:
-            # p.sampler_name = 'DDIM'
             p.steps = p.steps if p.steps >= 50 else 50      
             global creg, sreg, sizereg #? any choice better than global 
             creg, sreg, sizereg = args[-4], args[-3], args[-2]
@@ -199,7 +195,6 @@ class ExtensionTemplateScript(scripts.Script):
             p.setup_prompts()
             p.setup_conds()
             all_cond_embeddings = []
-            # pdb.set_trace()
             for i in range(len(prompts)):
                 if p.sd_model.is_sdxl:
                     embeddings = p.c.batch[i][0].schedules[0].cond['crossattn']
@@ -299,8 +294,6 @@ class ExtensionTemplateScript(scripts.Script):
                             'model':model,
                             'ddim-series': ddim, 
                             'text_cond': text_embed,
-                                #cond_embeddings[:1].repeat(bsz,1,1) # cond_embeddings[:1].repeat(bsz,1,1)
-                                # 'text_cond': torch.cat([cond_embeddings[:1].repeat(bsz,1,1)[:,:text_input['length'][0],:], uncond_embeddings[:1,:text_input['length'][0]]]) # torch.cat([cond_embeddings[:1].repeat(bsz,1,1), uncond_embeddings[:1]]) 
                         }
             global COUNT
             COUNT = 0
@@ -334,7 +327,6 @@ def default(val, d):
     return d() if isfunction(d) else d
 
 def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times_crossframe_attn_in_self=0):
-    # print('applied!')
     h = self.heads
     
     if additional_tokens is not None:
@@ -347,14 +339,6 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
     global text_cond, timesteps
     
     
-    # negative prompts
-    # if context is not None:
-    #     if not text_cond['ddim-series']:
-    #         text_context = torch.cat([text_context, context[context.size(0)//2:,:,:]])
-    #     else:
-    #         text_context = torch.cat([context[:context.size(0)//2,:,:], text_context])
-    #     text_context = torch.cat([text_context, context[:, text_context.size(1):,:]], dim=1)
-        # text_context = context
     layers = 140 if text_cond['model'] == 'sdxl' else 32 # v2.1 v1.5: 32 xl:140 
     
     global sreg, creg, COUNT, creg_maps, sreg_maps, reg_sizes
@@ -372,8 +356,6 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
     k = self.to_k(text_context)
     v = self.to_v(text_context)
 
-    # print(n_times_crossframe_attn_in_self)
-    # pdb.set_trace()
     if n_times_crossframe_attn_in_self:
         # reprogramming cross-frame attention as in https://arxiv.org/abs/2303.13439
         assert x.shape[0] % n_times_crossframe_attn_in_self == 0
@@ -387,9 +369,6 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
 
     q, k, v = map(lambda t: rearrange(t, "b n (h d) -> (b h) n d", h=h), (q, k, v))
     
-    
-    
-    
     # force cast to fp32 to avoid overflowing
     if _ATTN_PRECISION =="fp32":
         with torch.autocast(enabled=False, device_type = 'cuda'):
@@ -398,17 +377,11 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
     else:
         sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
     
-    # pdb.set_trace()
-    
     if COUNT/layers < len(timesteps) * rate:
         pass
-        # # if COUNT == 2750:
-        # #     pdb.set_trace()
         if not text_cond['ddim-series']:
             index = list(range(sim.size(0)//2))
-            # index_rest = list(range(sim.size(0)//2, sim.size(0)))
         else:
-            # index = list(range(sim.size(0)//2))
             index = list(range(sim.size(0)//2, sim.size(0)))
         treg = torch.pow(timesteps[COUNT//layers]/1000, 5)
         ## reg at self-attn
@@ -416,21 +389,18 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
 
             min_value = sim[index].min(-1)[0].unsqueeze(-1)
             max_value = sim[index].max(-1)[0].unsqueeze(-1)
-            # pdb.set_trace()
             
             segmask = sreg_maps[sim.size(1)].repeat(h,1,1)
             size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
             
             sim[index] += (segmask>0)*size_reg*sreg*treg*(max_value-sim[index])
             sim[index] -= ~(segmask>0)*size_reg*sreg*treg*(sim[index]-min_value)
-            # mask = sreg_maps[sim.size(1)]
 
 
         ## reg at cross-attn
         else:
             min_value = sim[index].min(-1)[0].unsqueeze(-1)
             max_value = sim[index].max(-1)[0].unsqueeze(-1)
-            # pdb.set_trace()
 
             segmask = creg_maps[sim.size(1)].repeat(h,1,1)
         
@@ -438,7 +408,6 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
 
             sim[index] += (segmask>0)*size_reg*creg*treg*(max_value-sim[index])
             sim[index] -= ~(segmask>0)*size_reg*creg*treg*(sim[index]-min_value)
-            # mask = creg_maps[sim.size(1)]
 
     del q, k
     if exists(mask):
