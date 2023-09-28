@@ -7,4 +7,4 @@ ICCV 2023 paper [**Dense Text-to-Image Generation with Attention Modulation**](h
 
 Merely support SD v1.5, no bug for SDXL, but not work :<
 
-Use this extension together with ControlNet will be very fun :>
+Use this extension together with [**ControlNet**](https://github.com/Mikubill/sd-webui-controlnet.git) will be very fun :>
