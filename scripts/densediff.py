@@ -344,10 +344,7 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
     global sreg, creg, COUNT, creg_maps, sreg_maps, reg_sizes
     COUNT += 1
     
-    if text_cond['model'] == 'sdxl':
-        rate = 0.4  
-    else:
-        rate = 0.3
+    rate = 0.3
 
         
     text_context = text_cond['text_cond'] if context is not None else x
@@ -395,7 +392,8 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
             
             sim[index] += (segmask>0)*size_reg*sreg*treg*(max_value-sim[index])
             sim[index] -= ~(segmask>0)*size_reg*sreg*treg*(sim[index]-min_value)
-
+            if text_cond['model'] != 'sdxl':    
+                mask = sreg_maps[sim.size(1)]
 
         ## reg at cross-attn
         else:
@@ -408,7 +406,10 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
 
             sim[index] += (segmask>0)*size_reg*creg*treg*(max_value-sim[index])
             sim[index] -= ~(segmask>0)*size_reg*creg*treg*(sim[index]-min_value)
-
+            
+            # to augmentation the semantics of each mask
+            if text_cond['model'] == 'sdxl':
+                mask = creg_maps[sim.size(1)]
     del q, k
     if exists(mask):
         # mask = rearrange(mask, 'b ... -> b (...)')
