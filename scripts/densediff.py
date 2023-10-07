@@ -132,11 +132,7 @@ class ExtensionTemplateScript(scripts.Script):
 
         return [general_prompt, binary_matrixes, *prompts, creg_, sreg_, sizereg_, enable]
 
-                        
-                        
 
-
-    
     def after_component(self, general_output, **kwargs): 
         if kwargs.get("elem_id") == "txt2img_prompt":
             self.boxx = general_output
@@ -307,9 +303,7 @@ class ExtensionTemplateScript(scripts.Script):
                 p.prompts = prompts[0]
         
         return super().process(p, *args)
-    
-    
-    
+   
     # Extension main process
     # Type: (StableDiffusionProcessing, List<UI>) -> (Processed)
     # args is [StableDiffusionProcessing, UI1, UI2, ...]
