@@ -25,7 +25,7 @@ MAX_COLORS = 12
 _ATTN_PRECISION = os.environ.get("ATTN_PRECISION", "fp32")
 COUNT = 0
 
-class ExtensionTemplateScript(scripts.Script):
+class DenseDiff(scripts.Script):
     def __init__(self):
         super().__init__()
         # self.MAX_COLORS = 12
