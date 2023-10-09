@@ -385,7 +385,7 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
         treg = torch.pow(timesteps[COUNT//layers]/1000, 5)
         
         if sim.size(1) in sreg_maps:
-            # p.height != p.width is not recommand, may no effect
+            # p.height != p.width is not recommand, may lose controllability
             ## reg at self-attn
             if context is None:
 
