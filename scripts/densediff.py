@@ -383,35 +383,38 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
         else:
             index = list(range(sim.size(0)//2, sim.size(0)))
         treg = torch.pow(timesteps[COUNT//layers]/1000, 5)
-        ## reg at self-attn
-        if context is None:
-
-            min_value = sim[index].min(-1)[0].unsqueeze(-1)
-            max_value = sim[index].max(-1)[0].unsqueeze(-1)
-            
-            segmask = sreg_maps[sim.size(1)].repeat(h,1,1)
-            size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
-            
-            sim[index] += (segmask>0)*size_reg*sreg*treg*(max_value-sim[index])
-            sim[index] -= ~(segmask>0)*size_reg*sreg*treg*(sim[index]-min_value)
-            if text_cond['model'] != 'sdxl':    
-                mask = sreg_maps[sim.size(1)]
-
-        ## reg at cross-attn
-        else:
-            min_value = sim[index].min(-1)[0].unsqueeze(-1)
-            max_value = sim[index].max(-1)[0].unsqueeze(-1)
-
-            segmask = creg_maps[sim.size(1)].repeat(h,1,1)
         
-            size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
+        if sim.size(1) in sreg_maps:
+            # p.height != p.width is not recommand, may no effect
+            ## reg at self-attn
+            if context is None:
 
-            sim[index] += (segmask>0)*size_reg*creg*treg*(max_value-sim[index])
-            sim[index] -= ~(segmask>0)*size_reg*creg*treg*(sim[index]-min_value)
+                min_value = sim[index].min(-1)[0].unsqueeze(-1)
+                max_value = sim[index].max(-1)[0].unsqueeze(-1)
+                
+                segmask = sreg_maps[sim.size(1)].repeat(h,1,1)
+                size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
+                
+                sim[index] += (segmask>0)*size_reg*sreg*treg*(max_value-sim[index])
+                sim[index] -= ~(segmask>0)*size_reg*sreg*treg*(sim[index]-min_value)
+                if text_cond['model'] != 'sdxl':    
+                    mask = sreg_maps[sim.size(1)]
+    
+            ## reg at cross-attn
+            else:
+                min_value = sim[index].min(-1)[0].unsqueeze(-1)
+                max_value = sim[index].max(-1)[0].unsqueeze(-1)
+    
+                segmask = creg_maps[sim.size(1)].repeat(h,1,1)
             
-            # to augmentation the semantics of each mask
-            if text_cond['model'] == 'sdxl':
-                mask = creg_maps[sim.size(1)]
+                size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
+    
+                sim[index] += (segmask>0)*size_reg*creg*treg*(max_value-sim[index])
+                sim[index] -= ~(segmask>0)*size_reg*creg*treg*(sim[index]-min_value)
+                
+                # to augmentation the semantics of each mask
+                if text_cond['model'] == 'sdxl':
+                    mask = creg_maps[sim.size(1)]
     del q, k
     if exists(mask):
         # mask = rearrange(mask, 'b ... -> b (...)')
