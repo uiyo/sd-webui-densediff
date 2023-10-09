@@ -69,15 +69,18 @@ class DenseDiff(scripts.Script):
                     if not is_img2img:
                         with gr.Tabs():
                             with gr.Tab(label="Sketch"):
-                                masks = gr.Image(source="canvas", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                                masks_sk = gr.Image(source="canvas", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                                sketch_button_sk = gr.Button("Start Processing Sketch", interactive=True)
                             with gr.Tab(label="Canvas"):
-                                masks = gr.Image(source="upload", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                                masks_cv = gr.Image(source="upload", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                                sketch_button_cv = gr.Button("Start Processing Sketch", interactive=True)
                     else:
                         image = self.original_image
                         masks = self.skecth
-
-                    with gr.Column():
                         sketch_button = gr.Button("Start Processing Sketch", interactive=True)
+
+                    # with gr.Column():
+                    #     sketch_button = gr.Button("Start Processing Sketch", interactive=True)
                     with gr.Column(visible=False) as post_sketch:
                         for n in range(MAX_COLORS):
                             if n == 0:
@@ -111,9 +114,10 @@ class DenseDiff(scripts.Script):
                 
             
             if not is_img2img:
-                sketch_button.click(pre.process_sketch, inputs=masks, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
+                sketch_button_sk.click(pre.process_sketch, inputs=masks_sk, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
+                sketch_button_cv.click(pre.process_sketch, inputs=masks_cv, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             else:
-                # pass
+                
                 sketch_button.click(pre.process_sketch, inputs=[masks, image], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             
             get_genprompt_run.click(pre.process_prompts, inputs=[binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
