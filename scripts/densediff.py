@@ -67,7 +67,11 @@ class DenseDiff(scripts.Script):
             with gr.Row(visible=True) as enabled: 
                 with gr.Box():
                     if not is_img2img:
-                        masks = gr.Image(source="canvas", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                        with gr.Tabs():
+                            with gr.Tab(label="Sketch"):
+                                masks = gr.Image(source="canvas", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
+                            with gr.Tab(label="Canvas"):
+                                masks = gr.Image(source="upload", tool="color-sketch", type="numpy", shape=(512, 512)).style(width=400, height=400)
                     else:
                         image = self.original_image
                         masks = self.skecth
