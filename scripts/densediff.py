@@ -395,7 +395,7 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
                 segmask = sreg_maps[sim.size(1)].repeat(h,1,1)
                 size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
                 
-                sim[index] += (segmask>0)*size_reg*sreg*treg*(max_value-sim[index])
+                sim[index] += (segmask>0)*(size_reg*sreg*treg*(max_value-sim[index])+5.0)
                 sim[index] -= ~(segmask>0)*size_reg*sreg*treg*(sim[index]-min_value)
                 if text_cond['model'] != 'sdxl':    
                     mask = sreg_maps[sim.size(1)]
@@ -409,7 +409,7 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
             
                 size_reg = reg_sizes[sim.size(1)].repeat(h,1,1)
     
-                sim[index] += (segmask>0)*size_reg*creg*treg*(max_value-sim[index])
+                sim[index] += (segmask>0)*(size_reg*creg*treg*(max_value-sim[index])+5.0)
                 sim[index] -= ~(segmask>0)*size_reg*creg*treg*(sim[index]-min_value)
                 
                 # to augmentation the semantics of each mask
