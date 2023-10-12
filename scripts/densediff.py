@@ -176,7 +176,7 @@ class DenseDiff(scripts.Script):
     
     def process(self, p, *args):
         if args[-1]:
-            p.steps = p.steps if p.steps >= 50 else 50      
+            p.steps = p.steps if p.steps >= 30 else 30      
             global creg, sreg, sizereg #? any choice better than global 
             creg, sreg, sizereg = args[-4], args[-3], args[-2]
             master_prompt, binary_matrixes =  args[0], args[1]
