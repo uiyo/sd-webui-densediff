@@ -301,7 +301,7 @@ class DenseDiff(scripts.Script):
                         }
             global COUNT
             COUNT = 0
-
+            torch.compile(mod_forward)
             # modify the attention operation
             for _module in p.sd_model.model.named_modules():
                 if _module[1].__class__.__name__ == 'CrossAttention':
