@@ -79,8 +79,6 @@ class DenseDiff(scripts.Script):
                         masks = self.skecth
                         sketch_button = gr.Button("Start Processing Sketch", interactive=True)
 
-                    # with gr.Column():
-                    #     sketch_button = gr.Button("Start Processing Sketch", interactive=True)
                     with gr.Column(visible=False) as post_sketch:
                         for n in range(MAX_COLORS):
                             if n == 0:
@@ -260,9 +258,9 @@ class DenseDiff(scripts.Script):
     
                         pww_maps[:,j:j+wlen,:,:] = layouts[i-1:i]
                         cond_embeddings[0][j:j+wlen] = cond_embeddings[i][1:1+wlen]
-                        break #?
+                        break #
 
-            global creg_maps #?
+            global creg_maps #
             creg_maps = {}
             for r in range(4):
                 layout_c = F.interpolate(pww_maps,(np.power(2,r+3),np.power(2,r+3)),mode='nearest').view(1,77,-1).permute(0,2,1).repeat(bsz,1,1)
@@ -301,7 +299,7 @@ class DenseDiff(scripts.Script):
                         }
             global COUNT
             COUNT = 0
-            torch.compile(mod_forward)
+            torch.compile(mod_forward) # this is so said acceleration 
             # modify the attention operation
             for _module in p.sd_model.model.named_modules():
                 if _module[1].__class__.__name__ == 'CrossAttention':
