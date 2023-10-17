@@ -3,7 +3,7 @@ import gradio as gr
 import os
 import torch
 
-
+from scripts.logging import logger
 from modules import images, script_callbacks
 from modules.processing import process_images, Processed
 from modules.processing import Processed
@@ -252,8 +252,10 @@ class DenseDiff(scripts.Script):
                 for j in range(77):
                     try:
                         text_input['input_ids'][0][j:j+wlen] == widx
-                    except:
-                        pdb.set_trace()
+                    except Exception as e:
+                        logger.error(e)
+                        raise ValueError('Segment lables are unmatched with formulated prompts!')
+                        
                     if (text_input['input_ids'][0][j:j+wlen] == widx).sum() == wlen:
     
                         pww_maps[:,j:j+wlen,:,:] = layouts[i-1:i]
