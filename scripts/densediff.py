@@ -18,7 +18,6 @@ import modules.scripts as scripts
 import gradio as gr
 import os
 import numpy as np
-import pdb
 import torch.nn.functional as F
 
 MAX_COLORS = 12
