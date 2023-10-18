@@ -308,6 +308,10 @@ class DenseDiff(scripts.Script):
             if p.sd_model.is_sdxl:
                 text_cond['model'] = 'sdxl'
                 p.prompts = prompts[0]
+        else:
+            for _module in p.sd_model.model.named_modules():
+                if _module[1].__class__.__name__ == 'CrossAttention':
+                    _module[1].forward = original_forward.__get__(_module[1], _module[1].__class__)
         
         return super().process(p, *args)
    
@@ -429,4 +433,48 @@ def mod_forward(self, x, context=None, mask=None, additional_tokens=None,n_times
         # remove additional token
         out = out[:, n_tokens_to_mask:]
 
+    return self.to_out(out)
+
+
+def original_forward(self, x, context=None, mask =None, additional_tokens=None, n_times_crossframe_attn_in_self=0):
+    # sgm.modules.attention CrossAttention.forward() 
+    # ./repositories/generative-models/sgm/modules/attention.py
+    h = self.heads
+
+    if additional_tokens is not None:
+        # get the number of masked tokens at the beginning of the output sequence
+        n_tokens_to_mask = additional_tokens.shape[1]
+        # add additional token
+        x = torch.cat([additional_tokens, x], dim=1)
+
+    q = self.to_q(x)
+    context = default(context, x)
+    k = self.to_k(context)
+    v = self.to_v(context)
+
+    if n_times_crossframe_attn_in_self:
+        # reprogramming cross-frame attention as in https://arxiv.org/abs/2303.13439
+        assert x.shape[0] % n_times_crossframe_attn_in_self == 0
+        n_cp = x.shape[0] // n_times_crossframe_attn_in_self
+        k = repeat(
+            k[::n_times_crossframe_attn_in_self], "b ... -> (b n) ...", n=n_cp
+        )
+        v = repeat(
+            v[::n_times_crossframe_attn_in_self], "b ... -> (b n) ...", n=n_cp
+        )
+
+    q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=h), (q, k, v))
+    
+    with sdp_kernel(**BACKEND_MAP[self.backend]):
+        # print("dispatching into backend", self.backend, "q/k/v shape: ", q.shape, k.shape, v.shape)
+        out = F.scaled_dot_product_attention(
+            q, k, v, attn_mask=mask
+        )  # scale is dim_head ** -0.5 per default
+
+    del q, k, v
+    out = rearrange(out, "b h n d -> b n (h d)", h=h)
+
+    if additional_tokens is not None:
+        # remove additional token
+        out = out[:, n_tokens_to_mask:]
     return self.to_out(out)
