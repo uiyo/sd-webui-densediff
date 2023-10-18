@@ -128,7 +128,7 @@ class DenseDiff(scripts.Script):
             # TODO: add more UI components (cf. https://gradio.app/docs/#components)
                         
 
-        return return [enabled, general_prompt, binary_matrixes, creg_, sreg_, sizereg_, *prompts]
+        return [enabled, general_prompt, binary_matrixes, creg_, sreg_, sizereg_, *prompts]
 
 
     def before_component(self, general_output, **kwargs): 
