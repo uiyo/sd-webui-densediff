@@ -54,14 +54,12 @@ class DenseDiff(scripts.Script):
         binary_matrixes = gr.State([])
         # self.steps = 50
         # self.stepsIMG = 50
-        # masks = None
+        masks = None
         with gr.Accordion('DenseDiffusion', open=False):
             enabled = gr.Checkbox(label="Disabled ❌", value=False, elem_id='densenet_enable', interactive=True)
-            if not is_img2img:
-                gr.HTML('<p style="margin-bottom:0.8em"> **If DenseDiffusion is enabled, the default sampling steps can only be larger than 30, please use main prompt box only for loading negative prompts and lora, max length is 75. </p>')
+    
+            gr.HTML('<p style="margin-bottom:0.8em"> **If DenseDiffusion is enabled, the default sampling steps can only be larger than 30, please use main prompt box only for loading negative prompts and lora, max length is 75. </p>')
                 
-            else:
-                gr.HTML('<p style="margin-bottom:0.8em"> ** USER GUIDIENCE: Upload your image in the sketch tab -> copy your image to img2img -> complete your masked sketch -> Start Processing Sketch and label your masks -> formulate your prompts and send to the general prompt box (optinal) -> switch your sketch tab to img2img (!important) -> Generate </p>')
 
             with gr.Row(visible=True): 
                 with gr.Box():
@@ -110,13 +108,13 @@ class DenseDiff(scripts.Script):
             enabled.change(pre.switchEnableLabel, [enabled], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts])
             
             if not is_img2img:
-                sketch_button_sk.click(pre.process_sketch, inputs=masks_sk, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
-                sketch_button_cv.click(pre.process_sketch, inputs=masks_cv, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
+                sketch_button_sk.click(pre.process_sketch, inputs=[enabled, masks_sk], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
+                sketch_button_cv.click(pre.process_sketch, inputs=[enabled, masks_cv], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             else:
                 
-                sketch_button.click(pre.process_sketch, inputs=[masks, image], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
+                sketch_button.click(pre.process_sketch, inputs=[enabled, masks, image], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             
-            get_genprompt_run.click(pre.process_prompts, inputs=[binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
+            get_genprompt_run.click(pre.process_prompts, inputs=[enabled, binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
             
             if not is_img2img:
                 if enabled:
