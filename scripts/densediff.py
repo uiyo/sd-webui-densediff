@@ -3,8 +3,6 @@ import gradio as gr
 import os
 import torch
 
-from scripts.logging import logger
-from modules import images, script_callbacks
 from modules.processing import process_images, Processed
 from modules.processing import Processed
 from modules.shared import opts, cmd_opts, state
@@ -13,11 +11,16 @@ from scripts import pre
 from torch import nn, einsum
 from einops import rearrange, repeat
 from inspect import isfunction
+from contextlib import nullcontext
+from packaging import version
+from modules import images, scripts, script_callbacks, shared
+from scripts.logging import logger
 
 import modules.scripts as scripts
 import gradio as gr
 import os
 import numpy as np
+import pdb
 import torch.nn.functional as F
 
 MAX_COLORS = 12
