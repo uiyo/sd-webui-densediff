@@ -24,6 +24,39 @@ MAX_COLORS = 12
 _ATTN_PRECISION = os.environ.get("ATTN_PRECISION", "fp32")
 COUNT = 0
 
+if version.parse(torch.__version__) >= version.parse("2.0.0"):
+    SDP_IS_AVAILABLE = True
+    from torch.backends.cuda import SDPBackend, sdp_kernel
+
+    BACKEND_MAP = {
+        SDPBackend.MATH: {
+            "enable_math": True,
+            "enable_flash": False,
+            "enable_mem_efficient": False,
+        },
+        SDPBackend.FLASH_ATTENTION: {
+            "enable_math": False,
+            "enable_flash": True,
+            "enable_mem_efficient": False,
+        },
+        SDPBackend.EFFICIENT_ATTENTION: {
+            "enable_math": False,
+            "enable_flash": False,
+            "enable_mem_efficient": True,
+        },
+        None: {"enable_math": True, "enable_flash": True, "enable_mem_efficient": True},
+    }
+else:
+    from contextlib import nullcontext
+
+    SDP_IS_AVAILABLE = False
+    sdp_kernel = nullcontext
+    BACKEND_MAP = {}
+    print(
+        f"No SDP backend available, likely because you are running in pytorch versions < 2.0. In fact, "
+        f"you are using PyTorch {torch.__version__}. You might want to consider upgrading."
+    )
+
 class DenseDiff(scripts.Script):
     def __init__(self):
         super().__init__()
