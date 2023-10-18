@@ -163,12 +163,11 @@ class DenseDiff(scripts.Script):
             self.sizeregIMG = general_output     
     
     def process(self, p, enabled, general_prompt, binary_matrixes, creg_, sreg_, sizereg_, *prompts):
-        if args[-1]:
+        if enabled:
             p.steps = p.steps if p.steps >= 30 else 30      
             global creg, sreg, sizereg #? any choice better than global 
             creg, sreg, sizereg = creg_, sreg_, sizereg_
             master_prompt = general_prompt
-            prompts = args[2:2+len(binary_matrixes)]
             
             clipped_prompts = prompts[:len(binary_matrixes)]
             prompts = [master_prompt] + list(clipped_prompts)
