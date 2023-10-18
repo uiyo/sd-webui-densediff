@@ -131,7 +131,7 @@ class DenseDiff(scripts.Script):
         return [general_prompt, binary_matrixes, *prompts, creg_, sreg_, sizereg_, enable]
 
 
-    def after_component(self, general_output, **kwargs): 
+    def before_component(self, general_output, **kwargs): 
         if kwargs.get("elem_id") == "txt2img_prompt":
             self.boxx = general_output
         
@@ -164,12 +164,12 @@ class DenseDiff(scripts.Script):
         if kwargs.get("elem_id") == "img2img_densediff_sizereg":
             self.sizeregIMG = general_output     
     
-    def process(self, p, *args):
+    def process(self, p, enabled, general_prompt, binary_matrixes, creg_, sreg_, sizereg_, *prompts):
         if args[-1]:
             p.steps = p.steps if p.steps >= 30 else 30      
             global creg, sreg, sizereg #? any choice better than global 
-            creg, sreg, sizereg = args[-4], args[-3], args[-2]
-            master_prompt, binary_matrixes =  args[0], args[1]
+            creg, sreg, sizereg = creg_, sreg_, sizereg_
+            master_prompt = general_prompt
             prompts = args[2:2+len(binary_matrixes)]
             
             clipped_prompts = prompts[:len(binary_matrixes)]
@@ -301,12 +301,13 @@ class DenseDiff(scripts.Script):
             if p.sd_model.is_sdxl:
                 text_cond['model'] = 'sdxl'
                 p.prompts = prompts[0]
+            return 
         else:
             for _module in p.sd_model.model.named_modules():
                 if _module[1].__class__.__name__ == 'CrossAttention':
                     _module[1].forward = original_forward.__get__(_module[1], _module[1].__class__)
         
-        return super().process(p, *args)
+        return super().process(p)
    
     # Extension main process
     # Type: (StableDiffusionProcessing, List<UI>) -> (Processed)
