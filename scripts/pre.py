@@ -38,7 +38,7 @@ def process_sketch(enabled, masks, image=None):
     visibilities = []
     colors = []
     if not enabled and masks is None:
-        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), binary_matrixes, *visibilities, *colors]
+        return [gr.update(visible=False), binary_matrixes, *visibilities, *colors]
     else:
         if image is not None:
             if masks.size[0] != image.size[0]:
