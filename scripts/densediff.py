@@ -56,14 +56,14 @@ class DenseDiff(scripts.Script):
         # self.stepsIMG = 50
         # masks = None
         with gr.Accordion('DenseDiffusion', open=False):
-            enable = gr.Checkbox(label="Enable DenseDiffusion", value=False, elem_id='densenet_enable')
+            enabled = gr.Checkbox(label="Disabled ❌", value=False, elem_id='densenet_enable', interactive=True)
             if not is_img2img:
-                gr.HTML('<p style="margin-bottom:0.8em"> *If DenseDiffusion is enabled, the default sampling steps can only be larger than 50 </p>')
+                gr.HTML('<p style="margin-bottom:0.8em"> **If DenseDiffusion is enabled, the default sampling steps can only be larger than 30, please use main prompt box only for loading negative prompts and lora, max length is 75. </p>')
                 
             else:
                 gr.HTML('<p style="margin-bottom:0.8em"> ** USER GUIDIENCE: Upload your image in the sketch tab -> copy your image to img2img -> complete your masked sketch -> Start Processing Sketch and label your masks -> formulate your prompts and send to the general prompt box (optinal) -> switch your sketch tab to img2img (!important) -> Generate </p>')
 
-            with gr.Row(visible=True) as enabled: 
+            with gr.Row(visible=True): 
                 with gr.Box():
                     if not is_img2img:
                         with gr.Tabs():
@@ -104,11 +104,10 @@ class DenseDiff(scripts.Script):
                             sreg_ = gr.Slider(label=" w \u02E2 (The degree of attention modulation at self-attention layers) ", minimum=0, maximum=2., value=0.6, step=0.1, elem_id=sreg_id)
                             sizereg_ = gr.Slider(label="The degree of mask-area adaptive adjustment", minimum=0, maximum=1., value=1., step=0.1, elem_id=sizereg_id)
                     with gr.Row():
-                        final_run_btn = gr.Button("Send to Main Prompt", interactive=True)
-                        clear_prompt_btn = gr.Button("Clear Main Prompt", interactive=True) 
                         set_default_btn = gr.Button("Default Setting Reset", interactive=True) 
                            
                 
+            enabled.change(pre.switchEnableLabel, [enabled], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts])
             
             if not is_img2img:
                 sketch_button_sk.click(pre.process_sketch, inputs=masks_sk, outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
@@ -119,17 +118,11 @@ class DenseDiff(scripts.Script):
             
             get_genprompt_run.click(pre.process_prompts, inputs=[binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
             
-            if enable:
-                if not is_img2img:
-                    clear_prompt_btn.click(pre.clear_prompts, outputs=[self.boxx])
-                    final_run_btn.click(pre.send_text_to_prompt, inputs=[general_prompt, self.boxx], outputs=[self.boxx])
-                    
+            if not is_img2img:
+                if enabled:
                     set_default_btn.click(pre.default_setting, outputs=[self.steps, self.creg, self.sreg, self.sizereg])
-        
-                else:
-                    
-                    clear_prompt_btn.click(pre.clear_prompts, outputs=[self.boxxIMG])
-                    final_run_btn.click(pre.send_text_to_prompt, inputs=[general_prompt, self.boxxIMG], outputs=[self.boxxIMG])
+            else:
+                if enabled:    
                     set_default_btn.click(pre.default_setting, outputs=[self.stepsIMG, self.cregIMG, self.sregIMG, self.sizeregIMG])
  
             # TODO: add more UI components (cf. https://gradio.app/docs/#components)
