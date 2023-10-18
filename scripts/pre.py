@@ -12,21 +12,18 @@ def clear_prompts():
     return ""
 def default_setting():
     # print(creg)
-    return [50, 1.0, 0.6, 1]
+    return [30, 1.0, 0.6, 1]
 
 def send_text_to_prompt(new_text, old_text):
     if old_text == "":  # if text on the textbox text2img or img2img is empty, return new text
         return new_text
     return old_text + ", " + new_text  # else join them together and send it to the textbox
 
-def enable(button):
-    if button == "Disable DenseNet":
-        return [gr.update(value="Enable DenseNet"), gr.update(visible=False)]
+def process_prompts(enabled, binary_matrixes, *seg_prompts):
+    if enabled and len(binary_matrixes)>0:
+        return [gr.update(visible=True), gr.update(value=', '.join(seg_prompts[:len(binary_matrixes)]))]
     else:
-        return [gr.update(value="Disable DenseNet"), gr.update(visible=True)]
-
-def process_prompts(binary_matrixes, *seg_prompts):
-    return [gr.update(visible=True), gr.update(value=', '.join(seg_prompts[:len(binary_matrixes)]))]
+        return [gr.update(visible=False), gr.update(visible=False, value='')]
 
 def create_binary_matrix(img_arr, target_color):
     mask = np.all(img_arr == target_color, axis=-1)
@@ -35,7 +32,13 @@ def create_binary_matrix(img_arr, target_color):
 
 def process_sketch(masks, image=None):
     # masks is a image with white background and colored masks
-
+    binary_matrixes = []
+    im2arr = masks
+    
+    visibilities = []
+    colors = []
+    if not enabled and masks is None:
+        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), binary_matrixes, *visibilities, *colors]
     if image is not None:
         if masks.size[0] != image.size[0]:
             minsize_w = min(masks.size[0], image.size[0])
@@ -59,8 +62,6 @@ def process_sketch(masks, image=None):
         else:
             continue
     # canvas_data = {'image': masks, 'colors': colors_rgb}
-    binary_matrixes = []
-    im2arr = masks
     
     colors = [tuple(map(int, rgb[4:-1].split(','))) for rgb in colors_rgb]
     colors_fixed = []
@@ -82,10 +83,7 @@ def process_sketch(masks, image=None):
             binary_matrix_ = np.repeat(np.expand_dims(binary_matrix, axis=(-1)), 3, axis=(-1))
             colored_map = binary_matrix_*(r,g,b) + (1-binary_matrix_)*(50,50,50)
             colors_fixed.append(gr.update(value=colored_map.astype(np.uint8)))
-    
-    visibilities = []
-    colors = []
-    
+
     for n in range(MAX_COLORS):
         visibilities.append(gr.update(visible=False))
         colors.append(gr.update())
@@ -105,3 +103,16 @@ def preprocess_mask(mask_, h, w, device):
     mask = torch.from_numpy(mask).to(device)
     mask = torch.nn.functional.interpolate(mask, size=(h, w), mode='nearest')
     return mask
+
+def switchEnableLabel(enabled):
+    binary_matrixes = gr.State([])
+    prompts = []
+    
+    if enabled == True:
+        for n in range(MAX_COLORS):
+            prompts.append(gr.update(value=''))
+        return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts]
+    else:
+        for n in range(MAX_COLORS):
+            prompts.append(gr.update(value=''))
+        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), gr.update(visible=False), gr.update(value=''), binary_matrixes, *prompts]
