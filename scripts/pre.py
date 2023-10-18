@@ -91,7 +91,9 @@ def process_sketch(masks, image=None):
         visibilities[n] = gr.update(visible=True)
         colors[n] = colors_fixed[n]
 
-    # pdb.set_trace()    
+     if not enabled:
+         return [gr.update(visible=False), binary_matrixes, *visibilities, *colors]
+        
     return [gr.update(visible=True), binary_matrixes, *visibilities, *colors]
 
 def preprocess_mask(mask_, h, w, device):
