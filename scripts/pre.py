@@ -30,7 +30,7 @@ def create_binary_matrix(img_arr, target_color):
     binary_matrix = mask.astype(int)
     return binary_matrix
 
-def process_sketch(masks, image=None):
+def process_sketch(enabled, masks, image=None):
     # masks is a image with white background and colored masks
     binary_matrixes = []
     im2arr = masks
