@@ -142,23 +142,22 @@ class DenseDiff(scripts.Script):
                            
                 
             if not is_img2img:
-                enabled.change(pre.switchEnableLabel, [enabled, self.cfg_scale, self.steps], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale, self.steps])
+                enabled.change(pre.switchEnableLabel, [enabled, self.cfg_scale, self.steps, self.sampler], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale, self.steps, self.sampler])
                 sketch_button_sk.click(pre.process_sketch, inputs=[enabled, masks_sk], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
                 sketch_button_cv.click(pre.process_sketch, inputs=[enabled, masks_cv], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             elif is_img2img:
 
-                enabled.change(pre.switchEnableLabel, [enabled,  self.cfg_scale_IMG, self.stepsIMG], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale_IMG, self.stepsIMG])
+                enabled.change(pre.switchEnableLabel, [enabled,  self.cfg_scale_IMG, self.stepsIMG, self.sampler_IMG], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale_IMG, self.stepsIMG, self.sampler_IMG])
                 sketch_button.click(pre.process_sketch, inputs=[enabled, masks, image], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             
             get_genprompt_run.click(pre.process_prompts, inputs=[enabled, binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
             
             if not is_img2img:
                 if enabled:
-                    set_default_btn.click(pre.default_setting, outputs=[self.steps, self.creg, self.sreg, self.sizereg])
+                    set_default_btn.click(pre.default_setting, outputs=[self.steps, self.creg, self.sreg, self.sizereg, self.cfg_scale, self.sampler])
             else:
                 if enabled:    
-                    set_default_btn.click(pre.default_setting, outputs=[self.stepsIMG, self.cregIMG, self.sregIMG, self.sizeregIMG])
- 
+                    set_default_btn.click(pre.default_setting, outputs=[self.stepsIMG, self.cregIMG, self.sregIMG, self.sizeregIMG, self.cfg_scale_IMG, self.sampler_IMG])
             # TODO: add more UI components (cf. https://gradio.app/docs/#components)
                         
 
@@ -201,6 +200,10 @@ class DenseDiff(scripts.Script):
             self.cfg_scale = general_output
         if kwargs.get("elem_id") == "img2img_cfg_scale":
             self.cfg_scale_IMG = general_output
+        if kwargs.get("elem_id") == "txt2img_sampling":
+            self.sampler = general_output
+        if kwargs.get("elem_id") == "img2img_sampling":
+            self.sampler_IMG = general_output
         return super().before_component(general_output, **kwargs)
 
     def after_component(self, component, **kwargs):
@@ -213,6 +216,10 @@ class DenseDiff(scripts.Script):
             self.steps = component
         if kwargs.get("elem_id") == "img2img_steps":
             self.stepsIMG = component
+        if kwargs.get("elem_id") == "txt2img_sampling":
+            self.sampler = component
+        if kwargs.get("elem_id") == "img2img_sampling":
+            self.sampler_IMG = component
         return super().after_component(component, **kwargs)
 
     
