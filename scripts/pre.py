@@ -113,12 +113,13 @@ def preprocess_mask(mask_, h, w, device):
 def switchEnableLabel(enabled, cfg_scale, steps, sampler):
     binary_matrixes = gr.State([])
     prompts = []
-    sampler = 'DPM++ SDE Karras'
+    
     if enabled == True:
         if cfg_scale < 7.5:
             cfg_scale = 7.5 
         if steps < 30:
             steps = 30
+        sampler = 'DPM++ SDE Karras'
         for n in range(MAX_COLORS):
             prompts.append(gr.update(value=''))
         return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts, cfg_scale, steps, sampler]
