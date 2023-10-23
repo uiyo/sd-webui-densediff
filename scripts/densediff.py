@@ -141,13 +141,13 @@ class DenseDiff(scripts.Script):
                         set_default_btn = gr.Button("Default Setting Reset", interactive=True) 
                            
                 
-            enabled.change(pre.switchEnableLabel, [enabled], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts])
-            
             if not is_img2img:
+                enabled.change(pre.switchEnableLabel, [enabled, self.cfg_scale, self.steps], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale, self.steps])
                 sketch_button_sk.click(pre.process_sketch, inputs=[enabled, masks_sk], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
                 sketch_button_cv.click(pre.process_sketch, inputs=[enabled, masks_cv], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
-            else:
-                
+            elif is_img2img:
+
+                enabled.change(pre.switchEnableLabel, [enabled,  self.cfg_scale_IMG, self.stepsIMG], [enabled, post_sketch, gen_prompt_vis, general_prompt, binary_matrixes, *prompts, self.cfg_scale_IMG, self.stepsIMG])
                 sketch_button.click(pre.process_sketch, inputs=[enabled, masks, image], outputs=[post_sketch, binary_matrixes, *color_row, *colors], queue=False)
             
             get_genprompt_run.click(pre.process_prompts, inputs=[enabled, binary_matrixes, *prompts], outputs=[gen_prompt_vis, general_prompt], queue=False)
@@ -196,7 +196,25 @@ class DenseDiff(scripts.Script):
         if kwargs.get("elem_id") == "img2img_densediff_sreg":
             self.sregIMG = general_output
         if kwargs.get("elem_id") == "img2img_densediff_sizereg":
-            self.sizeregIMG = general_output     
+            self.sizeregIMG = general_output
+        if kwargs.get("elem_id") == "txt2img_cfg_scale":
+            self.cfg_scale = general_output
+        if kwargs.get("elem_id") == "img2img_cfg_scale":
+            self.cfg_scale_IMG = general_output
+        return super().before_component(general_output, **kwargs)
+
+    def after_component(self, component, **kwargs):
+        if kwargs.get("elem_id") == "txt2img_cfg_scale":
+            self.cfg_scale = component
+        if kwargs.get("elem_id") == "img2img_cfg_scale":
+            self.cfg_scale_IMG = component
+        
+        if kwargs.get("elem_id") == "txt2img_steps":
+            self.steps = component
+        if kwargs.get("elem_id") == "img2img_steps":
+            self.stepsIMG = component
+        return super().after_component(component, **kwargs)
+
     
     def process(self, p, enabled, general_prompt, binary_matrixes, creg_, sreg_, sizereg_, *prompts):
         if enabled:
