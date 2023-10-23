@@ -12,7 +12,7 @@ def clear_prompts():
     return ""
 def default_setting():
     # print(creg)
-    return [30, 1.0, 0.6, 1]
+    return [30, 1.0, 0.6, 1, 7.5, 'DPM++ SDE Karras']
 
 def send_text_to_prompt(new_text, old_text):
     if old_text == "":  # if text on the textbox text2img or img2img is empty, return new text
@@ -110,10 +110,10 @@ def preprocess_mask(mask_, h, w, device):
     mask = torch.nn.functional.interpolate(mask, size=(h, w), mode='nearest')
     return mask
 
-def switchEnableLabel(enabled, cfg_scale, steps):
+def switchEnableLabel(enabled, cfg_scale, steps, sampler):
     binary_matrixes = gr.State([])
     prompts = []
-    
+    sampler = 'DPM++ SDE Karras'
     if enabled == True:
         if cfg_scale < 7.5:
             cfg_scale = 7.5 
@@ -121,8 +121,8 @@ def switchEnableLabel(enabled, cfg_scale, steps):
             steps = 30
         for n in range(MAX_COLORS):
             prompts.append(gr.update(value=''))
-        return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts, cfg_scale, steps]
+        return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts, cfg_scale, steps, sampler]
     else:
         for n in range(MAX_COLORS):
             prompts.append(gr.update(value=''))
-        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), gr.update(visible=False), gr.update(value=''), binary_matrixes, *prompts, cfg_scale, steps]
+        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), gr.update(visible=False), gr.update(value=''), binary_matrixes, *prompts, cfg_scale, steps, sampler]
