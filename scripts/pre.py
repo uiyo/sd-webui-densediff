@@ -110,15 +110,19 @@ def preprocess_mask(mask_, h, w, device):
     mask = torch.nn.functional.interpolate(mask, size=(h, w), mode='nearest')
     return mask
 
-def switchEnableLabel(enabled):
+def switchEnableLabel(enabled, cfg_scale, steps):
     binary_matrixes = gr.State([])
     prompts = []
     
     if enabled == True:
+        if cfg_scale < 7.5:
+            cfg_scale = 7.5 
+        if steps < 30:
+            steps = 30
         for n in range(MAX_COLORS):
             prompts.append(gr.update(value=''))
-        return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts]
+        return [gr.Checkbox.update(label=str("Enabled ✅")), gr.update(visible=False), gr.update(visible=False), gr.update(), binary_matrixes, *prompts, cfg_scale, steps]
     else:
         for n in range(MAX_COLORS):
             prompts.append(gr.update(value=''))
-        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), gr.update(visible=False), gr.update(value=''), binary_matrixes, *prompts]
+        return [gr.Checkbox.update(label=str("Disabled ❌")), gr.update(visible=False), gr.update(visible=False), gr.update(value=''), binary_matrixes, *prompts, cfg_scale, steps]
