@@ -517,11 +517,16 @@ def original_forward(self, x, context=None, mask =None, additional_tokens=None, 
 
     q, k, v = map(lambda t: rearrange(t, "b n (h d) -> b h n d", h=h), (q, k, v))
     
-    with sdp_kernel(**BACKEND_MAP[self.backend]):
-        # print("dispatching into backend", self.backend, "q/k/v shape: ", q.shape, k.shape, v.shape)
+    if hasattr(self, 'backend'):
+        with sdp_kernel(**BACKEND_MAP[self.backend]):
+            # print("dispatching into backend", self.backend, "q/k/v shape: ", q.shape, k.shape, v.shape)
+            out = F.scaled_dot_product_attention(
+                q, k, v, attn_mask=mask
+            )  # scale is dim_head ** -0.5 per default
+    else:
         out = F.scaled_dot_product_attention(
             q, k, v, attn_mask=mask
-        )  # scale is dim_head ** -0.5 per default
+        )
 
     del q, k, v
     out = rearrange(out, "b h n d -> b n (h d)", h=h)
